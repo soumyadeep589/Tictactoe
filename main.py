@@ -30,10 +30,14 @@ def drawStatus(board):
         message = x1 + "'s turn"
     else:
         message = winner + " won!"
+
+    image1 = pygame.image.load('refresh.png').convert_alpha()
+    image2 = pygame.transform.scale(image1, (30, 30))
     font = pygame.font.Font(None, 24)
     text = font.render(message, 1, (10, 10, 10))
     board.fill((250, 250, 250), (0, 300, 300, 25))
     board.blit(text, (10, 300))
+    board.blit(image2, (260, 300))
 
 
 def showBoard(display_var, board):
@@ -42,22 +46,41 @@ def showBoard(display_var, board):
     pygame.display.flip()
 
 
+def refreshPage():
+    global x1, winner, grid, board, display_var
+    x1 = "X"
+    grid = [
+        [None, None, None],
+        [None, None, None],
+        [None, None, None]
+    ]
+    winner = None
+    display_var = pygame.display.set_mode((300, 340))
+    board = initBoard(display_var)
+
+
 def boardPos(mouse_x, mouse_y):
-    if(mouse_y < 100):
-        row = 0
-    elif(mouse_y < 200):
-        row = 1
-    else:
-        row = 2
+    if mouse_y < 300:
+        if(mouse_y < 100):
+            row = 0
+        elif(mouse_y < 200):
+            row = 1
+        else:
+            row = 2
 
-    if(mouse_x < 100):
-        col = 0
-    elif(mouse_x < 200):
-        col = 1
-    else:
-        col = 2
+        if(mouse_x < 100):
+            col = 0
+        elif(mouse_x < 200):
+            col = 1
+        else:
+            col = 2
 
-    return (row, col)
+        return (row, col)
+    else:
+        if mouse_x > 260:
+            return 'refresh the page'
+        else:
+            return 'nothing to do'
 
 
 def drawMove(board, board_row, board_col, piece):
@@ -75,17 +98,24 @@ def drawMove(board, board_row, board_col, piece):
 def clickBoard(board):
     global grid, x1
     (mouse_x, mouse_y) = pygame.mouse.get_pos()
-    (row, col) = boardPos(mouse_x, mouse_y)
-
-    if((grid[row][col] == "X") or (grid[row][col] == "O")):
+    data = boardPos(mouse_x, mouse_y)
+    if data == 'nothing to do':
         return
-
-    drawMove(board, row, col, x1)
-
-    if(x1 == "X"):
-        x1 = "O"
+    elif data == 'refresh the page':
+        refreshPage()
     else:
-        x1 = "X"
+        row, col = data
+        if((grid[row][col] == "X") or (grid[row][col] == "O")):
+            return
+
+        drawMove(board, row, col, x1)
+
+        if(x1 == "X"):
+            x1 = "O"
+        else:
+            x1 = "X"
+
+    # (row, col) = refreshPos(mouse_x, mouse_y)
 
 
 def gameWon(board):
@@ -95,7 +125,7 @@ def gameWon(board):
         if((grid[row][0] == grid[row][1] == grid[row][2]) and (grid[row][0] is not None)):
             winner = grid[row][0]
             pygame.draw.line(board, (250, 0, 0), (0, (row+1)*100 - 50), (300, (row + 1)*100 - 50), 2)
-        break
+            break
 
     for col in range(0, 3):
         if (grid[0][col] == grid[1][col] == grid[2][col]) and \
@@ -113,7 +143,7 @@ def gameWon(board):
 
 pygame.init()
 
-display_var = pygame.display.set_mode((300, 325))
+display_var = pygame.display.set_mode((300, 340))
 pygame.display.set_caption('Tic-Tac_Toe')
 
 board = initBoard(display_var)
