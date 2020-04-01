@@ -11,7 +11,7 @@ grid = [
 winner = None
 
 
-def initBoard(display_var):
+def init_board(display_var):
     background = pygame.Surface(display_var.get_size())
     background = background.convert()
     background.fill((250, 250, 250))
@@ -24,10 +24,13 @@ def initBoard(display_var):
     return background
 
 
-def drawStatus(board):
-    global x1, winner
+def draw_status(board):
+    global x1, winner, counter
     if(winner is None):
-        message = x1 + "'s turn"
+        if counter < 9:
+            message = x1 + "'s turn"
+        else:
+            message = 'Match Draw'
     else:
         message = winner + " won!"
 
@@ -40,14 +43,14 @@ def drawStatus(board):
     board.blit(image2, (260, 300))
 
 
-def showBoard(display_var, board):
-    drawStatus(board)
+def show_board(display_var, board):
+    draw_status(board)
     display_var.blit(board, (0, 0))
     pygame.display.flip()
 
 
-def refreshPage():
-    global x1, winner, grid, board, display_var
+def refresh_page():
+    global x1, winner, grid, board, display_var, counter
     x1 = "X"
     grid = [
         [None, None, None],
@@ -56,10 +59,11 @@ def refreshPage():
     ]
     winner = None
     display_var = pygame.display.set_mode((300, 340))
-    board = initBoard(display_var)
+    board = init_board(display_var)
+    counter = 0
 
 
-def boardPos(mouse_x, mouse_y):
+def board_pos(mouse_x, mouse_y):
     if mouse_y < 300:
         if(mouse_y < 100):
             row = 0
@@ -83,42 +87,45 @@ def boardPos(mouse_x, mouse_y):
             return 'nothing to do'
 
 
-def drawMove(board, board_row, board_col, piece):
+def draw_move(board, board_row, board_col, piece):
     center_x = ((board_col)*100) + 50
     center_y = ((board_row)*100) + 50
 
     if(piece == 'O'):
-        pygame.draw.circle(board, (0, 0, 0), (center_x, center_y), 44, 2)
+        pygame.draw.circle(board, (0, 0, 0), (center_x, center_y), 30, 2)
     else:
         pygame.draw.line(board, (0, 0, 0), (center_x - 22, center_y - 22), (center_x + 22, center_y + 22), 2)
         pygame.draw.line(board, (0, 0, 0), (center_x + 22, center_y - 22), (center_x - 22, center_y + 22), 2)
     grid[board_row][board_col] = piece
 
 
-def clickBoard(board):
-    global grid, x1
+def click_board(board):
+    global grid, x1, counter
     (mouse_x, mouse_y) = pygame.mouse.get_pos()
-    data = boardPos(mouse_x, mouse_y)
+    data = board_pos(mouse_x, mouse_y)
     if data == 'nothing to do':
         return
     elif data == 'refresh the page':
-        refreshPage()
+        refresh_page()
     else:
-        row, col = data
-        if((grid[row][col] == "X") or (grid[row][col] == "O")):
-            return
+        if winner is None:
+            row, col = data
+            if((grid[row][col] == "X") or (grid[row][col] == "O")):
+                return
 
-        drawMove(board, row, col, x1)
-
-        if(x1 == "X"):
-            x1 = "O"
+            draw_move(board, row, col, x1)
+            counter = counter + 1
+            if(x1 == "X"):
+                x1 = "O"
+            else:
+                x1 = "X"
         else:
-            x1 = "X"
+            return
 
     # (row, col) = refreshPos(mouse_x, mouse_y)
 
 
-def gameWon(board):
+def game_won(board):
     global grid, winner
 
     for row in range(0, 3):
@@ -141,25 +148,32 @@ def gameWon(board):
         pygame.draw.line(board, (250, 0, 0), (250, 50), (50, 250), 2)
 
 
-pygame.init()
+def main():
+    global display_var, board, counter
+    counter = 0
 
-display_var = pygame.display.set_mode((300, 340))
-pygame.display.set_caption('Tic-Tac_Toe')
+    pygame.init()
 
-board = initBoard(display_var)
+    display_var = pygame.display.set_mode((300, 340))
+    pygame.display.set_caption('Tic-Tac-Toe')
 
-run = True
+    board = init_board(display_var)
 
-while(run):
-    pygame.time.delay(100)
+    run = True
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            run = False
-        elif event.type is pygame.MOUSEBUTTONDOWN:
-            clickBoard(board)
-        gameWon(board)
+    while(run):
+        pygame.time.delay(100)
 
-        showBoard(display_var, board)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                run = False
+            elif event.type is pygame.MOUSEBUTTONDOWN:
+                click_board(board)
+            game_won(board)
 
-pygame.quit()
+            show_board(display_var, board)
+
+    pygame.quit()
+
+
+main()
